@@ -1,0 +1,98 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../app/infra/DB/generated"
+  moduleFormat = "esm"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum TransactionType {
+  INCOME
+  EXPENSE
+}
+
+model User {
+  id           String   @id @db.Uuid
+  name         String   @db.VarChar(100)
+  email        String   @unique @db.VarChar(254)
+  passwordHash String
+  avatarKey    String?
+  avatarVersion Int     @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  categories   Category[]
+  transactions Transaction[]
+  sessions     Session[]
+  resetTokens  PasswordReset[]
+}
+
+model AvatarFile {
+  key       String    @id
+  expiresAt DateTime?
+  createdAt DateTime  @default(now())
+  @@index([expiresAt])
+}
+
+model Session {
+  id        String   @id @db.Uuid
+  userId    String   @db.Uuid
+  expiresAt DateTime
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model PasswordReset {
+  id        String   @id @db.Uuid
+  userId    String   @db.Uuid
+  tokenHash String   @unique
+  expiresAt DateTime
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model AccountEmailJob {
+  id          String   @id @db.Uuid
+  email       String   @db.VarChar(254)
+  kind        String   @db.VarChar(20)
+  attempts    Int      @default(0)
+  availableAt DateTime @default(now())
+  lockedAt    DateTime?
+  createdAt   DateTime @default(now())
+  @@index([availableAt])
+}
+
+model Category {
+  id             String   @id @db.Uuid
+  userId         String   @db.Uuid
+  name           String   @db.VarChar(100)
+  normalizedName String   @db.VarChar(100)
+  description    String   @db.VarChar(500)
+  icon           String   @db.VarChar(40)
+  color          String   @db.VarChar(20)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  user           User     @relation(fields: [userId], references: [id], onDelete: Restrict)
+  transactions   Transaction[]
+  @@unique([id, userId])
+  @@unique([userId, normalizedName])
+}
+
+model Transaction {
+  id            String          @id @db.Uuid
+  userId        String          @db.Uuid
+  categoryId    String          @db.Uuid
+  description   String          @db.VarChar(500)
+  amountInCents BigInt
+  type          TransactionType
+  date          DateTime        @db.Date
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  user          User            @relation(fields: [userId], references: [id], onDelete: Restrict)
+  category      Category        @relation(fields: [categoryId, userId], references: [id, userId], onDelete: Restrict)
+  @@index([userId, date, id])
+  @@index([categoryId, userId])
+}

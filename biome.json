@@ -1,0 +1,40 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.6.6/schema.json",
+  "files": {
+    "includes": [
+      "**",
+      "!**/generated",
+      "!**/dist",
+      "!**/node_modules",
+      "!figma-docs",
+      "!docs-estudos",
+      "!**/coverage",
+      "!pnpm-lock.yaml",
+      "!frontend/public",
+      "!**/test-results",
+      "!**/playwright-report"
+    ]
+  },
+  "formatter": {
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 80
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "single",
+      "semicolons": "always",
+      "trailingCommas": "all"
+    }
+  },
+  "linter": {
+    "rules": {
+      "preset": "recommended"
+    }
+  },
+  "css": {
+    "parser": {
+      "tailwindDirectives": true
+    }
+  }
+}

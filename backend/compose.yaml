@@ -1,0 +1,84 @@
+name: financy
+services:
+  database:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: app
+      POSTGRES_DB: app
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - database:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U app -d app"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+  mail:
+    image: axllent/mailpit:v1.27
+    ports:
+      - "127.0.0.1:1025:1025"
+      - "127.0.0.1:8025:8025"
+  migrate:
+    profiles: ["app"]
+    image: financy-backend:local
+    build:
+      context: ..
+      dockerfile: backend/Dockerfile
+    environment:
+      DATABASE_URL: postgresql://app:app@database:5432/app
+    command: ["node", "node_modules/prisma/build/index.js", "migrate", "deploy"]
+    depends_on:
+      database:
+        condition: service_healthy
+  api:
+    profiles: ["app"]
+    image: financy-backend:local
+    build:
+      context: ..
+      dockerfile: backend/Dockerfile
+    environment:
+      NODE_ENV: development
+      HOST: 0.0.0.0
+      PORT: 3000
+      DATABASE_URL: postgresql://app:app@database:5432/app
+      JWT_SECRET: ${JWT_SECRET:-local-container-only-secret-change-before-hosting}
+      FRONTEND_URL: http://localhost:8080
+      CORS_ORIGINS: http://localhost:8080
+      SMTP_HOST: mail
+      SMTP_PORT: 1025
+      SMTP_SECURE: "false"
+      MAIL_FROM: Financy <no-reply@financy.local>
+      AVATAR_DIRECTORY: /app/backend/storage/avatars
+    volumes:
+      - avatars:/app/backend/storage/avatars
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      mail:
+        condition: service_started
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          'fetch("http://127.0.0.1:3000/health").then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))',
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  frontend:
+    profiles: ["app"]
+    build:
+      context: ..
+      dockerfile: frontend/Dockerfile
+    ports:
+      - "127.0.0.1:8080:80"
+    depends_on:
+      api:
+        condition: service_healthy
+volumes:
+  database:
+  avatars:

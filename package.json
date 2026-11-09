@@ -1,0 +1,33 @@
+{
+  "name": "financy",
+  "private": true,
+  "packageManager": "pnpm@10.18.0",
+  "engines": {
+    "node": ">=24.0.0 <25"
+  },
+  "scripts": {
+    "dev": "pnpm --filter @financy/backend dev",
+    "dev:frontend": "pnpm --filter @financy/frontend dev",
+    "test": "pnpm -r test",
+    "test:watch": "pnpm --filter @financy/backend test:watch",
+    "lint": "biome check . --error-on-warnings",
+    "lint:fix": "biome check . --write --error-on-warnings",
+    "format": "biome format . --write",
+    "typecheck": "pnpm -r typecheck",
+    "build": "pnpm -r build",
+    "knip": "knip",
+    "db:generate": "pnpm --filter @financy/backend db:generate",
+    "db:migrate": "pnpm --filter @financy/backend db:migrate",
+    "db:up": "docker compose -f backend/compose.yaml up -d",
+    "db:down": "docker compose -f backend/compose.yaml down",
+    "test:e2e": "pnpm --filter @financy/frontend test:e2e",
+    "containers:up": "docker compose --env-file backend/.env -f backend/compose.yaml --profile app up --build -d",
+    "validate": "pnpm --filter @financy/backend exec tsx ../.claude/run-validations.ts"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.6.6",
+    "typescript": "7.0.2",
+    "knip": "6.44.2"
+  },
+  "type": "module"
+}

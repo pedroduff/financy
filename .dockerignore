@@ -1,0 +1,15 @@
+**/node_modules
+**/dist
+**/coverage
+**/.env
+**/.env.*
+!**/.env.example
+**/test-results
+**/playwright-report
+**/generated
+**/storage
+.git
+.pnpm-store
+figma-docs
+docs-estudos
+**/.DS_Store
